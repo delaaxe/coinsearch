@@ -25,7 +25,9 @@
 		(async () => {
 			const coins = await (await fetch("backend-api.json")).json();
 			const coingeckoCoins = await (await fetch("coingecko-coins-markets.json")).json();
-			const top100Coins = new Set(coingeckoCoins.map(({ symbol }) => symbol.toLowerCase()));
+			const marketCapScores = Object.fromEntries(
+				coingeckoCoins.map(({ symbol, market_cap }) => [symbol.toLowerCase(), Math.floor(Math.log(market_cap))])
+			);
 
 			const search = (query) => (
 				coins.map(({ symbol, name }) => {
@@ -47,8 +49,8 @@
 					if (nameLower.includes(query)) {
 						score += 1
 					}
-					if (score > 0 && top100Coins.has(symbolLower)) {
-						score += 10;
+					if (score > 0 && marketCapScores[symbolLower]) {
+						score += marketCapScores[symbolLower];
 					}
 					return { symbol, name, score };
 				})
