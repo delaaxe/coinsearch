@@ -1,0 +1,67 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>A Basic HTML5 Template</title>
+  <meta name="description" content="A simple HTML5 Template for new projects.">
+  <meta name="author" content="SitePoint">
+
+  <link rel="icon" href="/favicon.ico">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <link rel="stylesheet" href="css/styles.css?v=1.0">
+
+</head>
+
+<body>
+  <!-- your content here... -->
+	<input type="search" placeholder="Search coingecko coins" autofocus></input>
+	<pre></pre>
+  <script>
+		(async () => {
+			const coins = await (await fetch("backend-api.json")).json();
+			const coingeckoCoins = await (await fetch("coingecko-coins-markets.json")).json();
+			const top100Coins = new Set(coingeckoCoins.map(({ symbol }) => symbol.toLowerCase()));
+
+			const search = (query) => (
+				coins.map(({ symbol, name }) => {
+					symbolLower = symbol.toLowerCase();
+					nameLower = name.toLowerCase();
+					let score = 0;
+					if (query === symbolLower || query === nameLower) {
+						score += 10
+					}
+					if (symbolLower.startsWith(query)) {
+						score += 5
+					}
+					if (nameLower.startsWith(query)) {
+						score += 5
+					}
+					if (symbolLower.includes(query)) {
+						score += 1
+					}
+					if (nameLower.includes(query)) {
+						score += 1
+					}
+					if (score > 0 && top100Coins.has(symbolLower)) {
+						score += 10;
+					}
+					return { symbol, name, score };
+				})
+				.filter(({ score }) => score > 0)
+				.sort((a, b) => b.score - a.score)
+			);
+
+			document.querySelector("input").addEventListener("keyup", (e) => {
+				document.querySelector("pre").innerText = search(e.target.value.toLowerCase())
+					.map(({ symbol, score, name }) => `${score}  [${symbol.toUpperCase()}] ${name}`)
+					.join("\n");
+			});
+		})();
+	</script>
+</body>
+</html>
